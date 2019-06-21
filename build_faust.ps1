@@ -1,79 +1,61 @@
-$BuildDir = "build"
-$OutputDir = "out"
+$ProjectDir = "build"
+$BuildDir = "out"
 $RootSourcePath = "./jni"
 
 $AndroidSdkDir = "Android/Sdk"
 $AndroidCmakeExe = "$AndroidSdkDir/cmake/3.6.4111459/bin/cmake.exe"
-$AndroidNinjaExe = "$AndroidSdkDir/cmake/3.6.4111459/bin/ninja.exe"
+$AndroidNinjaExe = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/ninja.exe"
 $NdkBundle = "$AndroidSdkDir/ndk-bundle/"
 $ToolchainFile = "$NdkBundle/build/cmake/android.toolchain.cmake"
-$ArchTargets = @("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-$LibraryFilePattern = "*.so"
-
-$IncludeFileSource = "$RootSourcePath/architecture/faust/dsp/llvm-dsp.h"
-$IncludeFileDest = "./$OutputDir/include/llvm-dsp.h"
+$ArchTargets = @("armeabi-v7a") #, "arm64-v8a", "x86", "x86_64")
 
 foreach ($archTarget in $ArchTargets) {
     # Remove build & output directories
-    if (Test-Path $BuildDir/$archTarget) {
+    $archProjectDir = "$ProjectDir/$archTarget"
+    $archBuildDir = "$BuildDir/$archTarget"
+    if (Test-Path $archProjectDir) {
         Write-Output "Removing existing Build Directory for $archTarget..."
-        Remove-Item $BuildDir/$archTarget -Force -Recurse
+        Remove-Item $archProjectDir -Force -Recurse
     }
-    if (Test-Path $OutputDir/$archTarget) {
+    if (Test-Path $archBuildDir) {
         Write-Output "Removing existing Output Directory for $archTarget..."
-        Remove-Item $OutputDir/$archTarget -Force -Recurse
+        Remove-Item $archBuildDir -Force -Recurse
     }
-
+    
     # Make Target Output Directory
     Write-Output "Creating Build & Output Directory for $archTarget ..."
-    New-Item -ItemType directory -Force -Path $BuildDir/$archTarget
-    New-Item -ItemType directory -Force -Path $OutputDir/$archTarget
-    $fullOutputPath = Resolve-Path $OutputDir/$archTarget
+    New-Item -ItemType directory -Force -Path $archProjectDir
+    New-Item -ItemType directory -Force -Path $archBuildDir
+    $fullArchBuildPath = Resolve-Path $archBuildDir
+    $fullLlvmDir = Resolve-Path "llvm_for_android/android-build/$archTarget/lib/cmake/llvm"
     
-    Write-Output "Building Faust for Android - $archTarget ..."
-    Push-Location $BuildDir/$archTarget
+    Write-Output "Generating Project Files for Architecture : $archTarget ..."
+    Push-Location $ProjectDir/$archTarget
     . $env:LOCALAPPDATA\$AndroidCmakeExe `
         -C../../backends.cmake `
         -C../../targets.cmake `
+        `
+        -DLLVM_DIR="$fullLlvmDir" `
+        -DUSE_LLVM_CONFIG="OFF" `
+        `
         -DANDROID_NDK="$env:LOCALAPPDATA/$NdkBundle" `
-        -DCMAKE_TOOLCHAIN_FILE="$env:LOCALAPPDATA/$ToolchainFile" `
-        -DCMAKE_MAKE_PROGRAM="$env:LOCALAPPDATA/$AndroidNinjaExe" `
-        -DCMAKE_CXX_FLAGS=-std=c++14 `
-        -DANDROID_STL=c++_shared `
+        -DANDROID_STL="c++_shared" `
         -DANDROID_ABI="$archTarget" `
         -DANDROID_LINKER_FLAGS="-landroid -llog" `
         -DANDROID_CPP_FEATURES="rtti exceptions" `
+        `
+        -DCMAKE_INSTALL_PREFIX="$fullArchBuildPath" `
+        -DCMAKE_TOOLCHAIN_FILE="$env:LOCALAPPDATA/$ToolchainFile" `
+        -DCMAKE_MAKE_PROGRAM="$env:LOCALAPPDATA/$AndroidNinjaExe" `
+        -DCMAKE_CXX_FLAGS="-std=c++14" `
+        `
         -G "Android Gradle - Ninja" `
         ../../jni/build/
     
-    . $env:LOCALAPPDATA\$AndroidCmakeExe --build .
-    Write-Output "Successfully built Faust for Android - $archTarget !"
+    Write-Output "Building LLVM for Architecture : $archTarget ..."
+    . $env:LOCALAPPDATA\$AndroidCmakeExe --build . --target install
     
-    Write-Output "Copying $archTarget binaries to Output Directory..."
-    $libraryFiles = (Get-ChildItem -Path $LibraryFilePattern -Recurse).FullName | Resolve-Path -Relative
-    foreach ($libFile in $libraryFiles) {
-        $libFileDest = "$fullOutputPath/" + $libFile.Replace(".\", "").Replace("\", "/")
-        Write-Output "Copying $libFile to $libFileDest ..."
-        New-Item -Force $libFileDest
-        Copy-Item -Force $libFile -Destination $libFileDest
-    }
     Pop-Location
+    Write-Output "Successfully built LLVM for Architecture : $archTarget !"
 }
 Write-Output "Successfully built Faust for Android!"
-
-# Remove Include output directory
-if (Test-Path $IncludeDir) {
-    Write-Output "Removing existing Output Include directory..."
-    Remove-Item $IncludeDir -Force -Recurse
-}
-
-# Make the Include output directory
-Write-Output "Creating output Include directory..."
-New-Item -ItemType directory -Force -Path $IncludeDir
-$includeFileDest = Resolve-Path $IncludeDir
-
-# Copy Headers to Include Directory
-Write-Output "Copying Include File to $IncludeFileDest ..."
-New-Item -Force $IncludeFileDest
-Copy-Item -Force $IncludeFileSource -Destination $IncludeFileDest
-Write-Output "Successfully copied Faust Include File to $IncludeFileDest !"

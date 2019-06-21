@@ -69,5 +69,5 @@ obj/*
 libs/*
 out/*
 jni/*
-!jni/dummy.txt
+!dummy.txt
 *.cmake
