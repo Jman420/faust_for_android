@@ -42,7 +42,7 @@ foreach ($archTarget in $ArchTargets) {
         -DANDROID_NDK="$NdkBundle" `
         -DANDROID_ABI="$archTarget" `
         `
-        -DCMAKE_BUILD_TYPE="Release" `
+        -DCMAKE_BUILD_TYPE="MinSizeRel" `
         -DCMAKE_INSTALL_PREFIX="$fullArchBuildPath" `
         -DCMAKE_SYSTEM_NAME="Android" `
         -DANDROID_PLATFORM="android-$AndroidSystemVersion" `
