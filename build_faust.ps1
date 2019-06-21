@@ -1,13 +1,14 @@
 $ProjectDir = "build"
 $BuildDir = "out"
-$RootSourcePath = "./jni"
+$RootSourcePath = "jni"
 
-$AndroidSdkDir = "Android/Sdk"
-$AndroidCmakeExe = "$AndroidSdkDir/cmake/3.6.4111459/bin/cmake.exe"
+$AndroidSystemVersion="21"
+$AndroidSdkDir = "$env:LOCALAPPDATA/Android/Sdk"
+$AndroidCmakeExe = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/cmake.exe"
 $AndroidNinjaExe = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/ninja.exe"
 $NdkBundle = "$AndroidSdkDir/ndk-bundle/"
 $ToolchainFile = "$NdkBundle/build/cmake/android.toolchain.cmake"
-$ArchTargets = @("armeabi-v7a") #, "arm64-v8a", "x86", "x86_64")
+$ArchTargets = @("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 foreach ($archTarget in $ArchTargets) {
     # Remove build & output directories
@@ -31,29 +32,29 @@ foreach ($archTarget in $ArchTargets) {
     
     Write-Output "Generating Project Files for Architecture : $archTarget ..."
     Push-Location $ProjectDir/$archTarget
-    . $env:LOCALAPPDATA\$AndroidCmakeExe `
+    . $AndroidCmakeExe `
         -C../../backends.cmake `
         -C../../targets.cmake `
         `
         -DLLVM_DIR="$fullLlvmDir" `
         -DUSE_LLVM_CONFIG="OFF" `
         `
-        -DANDROID_NDK="$env:LOCALAPPDATA/$NdkBundle" `
-        -DANDROID_STL="c++_shared" `
+        -DANDROID_NDK="$NdkBundle" `
         -DANDROID_ABI="$archTarget" `
-        -DANDROID_LINKER_FLAGS="-landroid -llog" `
-        -DANDROID_CPP_FEATURES="rtti exceptions" `
         `
+        -DCMAKE_BUILD_TYPE="Release" `
         -DCMAKE_INSTALL_PREFIX="$fullArchBuildPath" `
-        -DCMAKE_TOOLCHAIN_FILE="$env:LOCALAPPDATA/$ToolchainFile" `
-        -DCMAKE_MAKE_PROGRAM="$env:LOCALAPPDATA/$AndroidNinjaExe" `
-        -DCMAKE_CXX_FLAGS="-std=c++14" `
+        -DCMAKE_SYSTEM_NAME="Android" `
+        -DANDROID_PLATFORM="android-$AndroidSystemVersion" `
+        -DCMAKE_SYSTEM_VERSION="$AndroidSystemVersion" `
+        -DCMAKE_TOOLCHAIN_FILE="$ToolchainFile" `
+        -DCMAKE_MAKE_PROGRAM="$AndroidNinjaExe" `
         `
-        -G "Android Gradle - Ninja" `
-        ../../jni/build/
+        -G "Ninja" `
+        "../../$RootSourcePath/build/"
     
     Write-Output "Building LLVM for Architecture : $archTarget ..."
-    . $env:LOCALAPPDATA\$AndroidCmakeExe --build . --target install
+    . $AndroidCmakeExe --build . --target install
     
     Pop-Location
     Write-Output "Successfully built LLVM for Architecture : $archTarget !"
