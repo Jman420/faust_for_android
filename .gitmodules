@@ -1,4 +1,4 @@
-[submodule "llvm_for_android"]
-	path = llvm_for_android
+[submodule "libs/llvm_for_android"]
+	path = libs/llvm_for_android
 	url = git@github.com:Jman420/llvm_for_android.git
 	branch = master
