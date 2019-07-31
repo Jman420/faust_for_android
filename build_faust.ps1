@@ -11,6 +11,7 @@ $ToolchainFile = "$NdkBundle/build/cmake/android.toolchain.cmake"
 $ToolchainBinsRoot = "$NdkBundle/toolchains"
 $ArchTargets = @("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 $ArchToolchains = @("arm-linux-androideabi", "aarch64-linux-android", "x86", "x86_64" )
+$ArchToolchainFolders = @("arm-linux-androideabi", "aarch64-linux-android", "i686-linux-android", "x86_64-linux-android")
 $ArchToolchainVersion = "4.9"
 
 $LlvmAndroidBuildPath = "libs/llvm_for_android/android-build"
@@ -18,11 +19,12 @@ $LlvmAndroidBuildPath = "libs/llvm_for_android/android-build"
 for ($archCounter = 0; $archCounter -lt $ArchTargets.Length; $archCounter++) {
     $archTarget = $ArchTargets[$archCounter]
     $toolchain = $ArchToolchains[$archCounter]
+    $toolchainFolder = $ArchToolchainFolders[$archCounter]
 
     $archProjectDir = "$ProjectDir/$archTarget"
     $archBuildDir = "$BuildDir/$archTarget"
     $fullLlvmDir = Resolve-Path "libs/llvm_for_android/android-build/$archTarget/lib/cmake/llvm"
-    $archStrip = "$ToolchainBinsRoot/$toolchain-$ArchToolchainVersion/prebuilt/windows-x86_64/$toolchain/bin/strip.exe"
+    $archStrip = "$ToolchainBinsRoot/$toolchain-$ArchToolchainVersion/prebuilt/windows-x86_64/$toolchainFolder/bin/strip.exe"
     
     Write-Output "Setting Up Build Environment for Architecture : $archTarget ..."
     if (Test-Path $archProjectDir) {
