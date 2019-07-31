@@ -4,16 +4,27 @@ $RootSourcePath = "jni"
 
 $AndroidSystemVersion="21"
 $AndroidSdkDir = "$env:LOCALAPPDATA/Android/Sdk"
-$AndroidCmakeExe = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/cmake.exe"
-$AndroidNinjaExe = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/ninja.exe"
+$AndroidCmake = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/cmake.exe"
+$AndroidNinja = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/ninja.exe"
 $NdkBundle = "$AndroidSdkDir/ndk-bundle/"
 $ToolchainFile = "$NdkBundle/build/cmake/android.toolchain.cmake"
+$ToolchainBinsRoot = "$NdkBundle/toolchains"
 $ArchTargets = @("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+$ArchToolchains = @("arm-linux-androideabi", "aarch64-linux-android", "x86", "x86_64" )
+$ArchToolchainVersion = "4.9"
 
-foreach ($archTarget in $ArchTargets) {
-    # Remove build & output directories
+$LlvmAndroidBuildPath = "libs/llvm_for_android/android-build"
+
+for ($archCounter = 0; $archCounter -lt $ArchTargets.Length; $archCounter++) {
+    $archTarget = $ArchTargets[$archCounter]
+    $toolchain = $ArchToolchains[$archCounter]
+
     $archProjectDir = "$ProjectDir/$archTarget"
     $archBuildDir = "$BuildDir/$archTarget"
+    $fullLlvmDir = Resolve-Path "libs/llvm_for_android/android-build/$archTarget/lib/cmake/llvm"
+    $archStrip = "$ToolchainBinsRoot/$toolchain-$ArchToolchainVersion/prebuilt/windows-x86_64/$toolchain/bin/strip.exe"
+    
+    Write-Output "Setting Up Build Environment for Architecture : $archTarget ..."
     if (Test-Path $archProjectDir) {
         Write-Output "Removing existing Build Directory for $archTarget..."
         Remove-Item $archProjectDir -Force -Recurse
@@ -23,40 +34,53 @@ foreach ($archTarget in $ArchTargets) {
         Remove-Item $archBuildDir -Force -Recurse
     }
     
-    # Make Target Output Directory
     Write-Output "Creating Build & Output Directory for $archTarget ..."
     New-Item -ItemType directory -Force -Path $archProjectDir
     New-Item -ItemType directory -Force -Path $archBuildDir
-    $fullArchBuildPath = Resolve-Path $archBuildDir
-    $fullLlvmDir = Resolve-Path "llvm_for_android/android-build/$archTarget/lib/cmake/llvm"
+    $buildFullPath = Resolve-Path $archBuildDir
     
     Write-Output "Generating Project Files for Architecture : $archTarget ..."
     Push-Location $ProjectDir/$archTarget
-    . $AndroidCmakeExe `
-        -C../../backends.cmake `
-        -C../../targets.cmake `
+    . $AndroidCmake `
+        -DCMAKE_BUILD_TYPE="Release" `
+        -DCMAKE_INSTALL_PREFIX="$buildFullPath" `
+        -DCMAKE_TOOLCHAIN_FILE="$ToolchainFile" `
+        -DCMAKE_MAKE_PROGRAM="$AndroidNinja" `
+        `
+        -DANDROID_ABI="$archTarget" `
+        -DANDROID_PLATFORM="$AndroidSystemVersion" `
         `
         -DLLVM_DIR="$fullLlvmDir" `
         -DUSE_LLVM_CONFIG="OFF" `
         `
-        -DANDROID_NDK="$NdkBundle" `
-        -DANDROID_ABI="$archTarget" `
-        `
-        -DCMAKE_BUILD_TYPE="MinSizeRel" `
-        -DCMAKE_INSTALL_PREFIX="$fullArchBuildPath" `
-        -DCMAKE_SYSTEM_NAME="Android" `
-        -DANDROID_PLATFORM="android-$AndroidSystemVersion" `
-        -DCMAKE_SYSTEM_VERSION="$AndroidSystemVersion" `
-        -DCMAKE_TOOLCHAIN_FILE="$ToolchainFile" `
-        -DCMAKE_MAKE_PROGRAM="$AndroidNinjaExe" `
+        -C../../backends.cmake `
+        -C../../targets.cmake `
         `
         -G "Ninja" `
+        `
         "../../$RootSourcePath/build/"
+    if (!$?) {
+        Write-Output "Project Generation failed for Architecture : $archTarget !"
+        Pop-Location
+        exit 1
+    }
     
-    Write-Output "Building LLVM for Architecture : $archTarget ..."
-    . $AndroidCmakeExe --build . --target install
-    
+    Write-Output "Building Faust for Architecture : $archTarget ..."
+    . $AndroidCmake --build . --target install
+    if (!$?) {
+        Write-Output "Compilation failed for Architecture : $archTarget !"
+        Pop-Location
+        exit 1
+    }
     Pop-Location
-    Write-Output "Successfully built LLVM for Architecture : $archTarget !"
+    
+    Write-Output "Stripping libfaust for Architecture : $archTarget ..."
+    . $archStrip --strip-unneeded "$buildFullPath/lib/libfaust.so"
+    if (!$?) {
+        Write-Output "Stripping libfaust failed for Architecture : $archTarget !"
+        exit 1
+    }
+    
+    Write-Output "Successfully built Faust for Architecture : $archTarget !"
 }
 Write-Output "Successfully built Faust for Android!"
