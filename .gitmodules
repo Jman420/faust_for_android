@@ -1,0 +1,8 @@
+[submodule "libs/llvm_for_android"]
+	path = libs/llvm_for_android
+	url = git@github.com:Jman420/llvm_for_android.git
+	branch = master
+[submodule "faust-src"]
+	path = faust-src
+	url = git@github.com:grame-cncm/faust.git
+	branch = master
