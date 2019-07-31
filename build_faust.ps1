@@ -1,6 +1,6 @@
 $ProjectDir = "build"
 $BuildDir = "out"
-$RootSourcePath = "jni"
+$RootSourcePath = "faust-src"
 
 $AndroidSystemVersion="21"
 $AndroidSdkDir = "$env:LOCALAPPDATA/Android/Sdk"

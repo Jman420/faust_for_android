@@ -6,8 +6,7 @@ The [build_faust.ps1](build_faust.ps1) script is a PowerShell script which will 
   - LLVM for Android (See [https://github.com/Jman420/llvm_for_android](https://github.com/Jman420/llvm_for_android))
 
 ## Steps
-  - Download the latest release Source Code from [https://github.com/grame-cncm/faust/releases](https://github.com/grame-cncm/faust/releases)
-  - Open the Faust Source Code Archive and extract the contents (not the actual folder) of the 'faust-x.x.x' folder to the /jni/ directory
+  - Build LLVM for Android in libs/llvm_for_android/ (See above referenced repo for instructions)
   - Execute the [generate_configs.ps1](generate_configs.ps1) script to generate the 'backend.cmake' & 'targets.cmake' files
   - Modify the 'backend.cmake' & 'targets.cmake' files as necessary
   - Execute the [build_faust.ps1](build_faust.ps1) script
