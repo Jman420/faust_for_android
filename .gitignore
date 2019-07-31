@@ -68,6 +68,6 @@ fastlane/readme.md
 obj/*
 libs/*
 out/*
-jni/*
+faust-src/*
 !dummy.txt
 *.cmake
