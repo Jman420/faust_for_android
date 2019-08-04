@@ -1,4 +1,4 @@
-$RootSourcePath = "./jni"
+$RootSourcePath = "./faust-src"
 $BackendsFileSource = "$RootSourcePath/build/backends/backends.cmake"
 $TargetsFileSource = "$RootSourcePath/build/targets/regular.cmake"
 
