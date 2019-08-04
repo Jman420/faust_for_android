@@ -1,0 +1,24 @@
+$faustAndroidSrcPath = "<PATH TO FAUST FOR ANDROID SOURCE>"
+$cmakeExe = "$env:LOCALAPPDATA\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe"
+$archTarget = "x86"
+$platformVer = "21"
+
+. $cmakeExe `
+`
+-DCMAKE_TOOLCHAIN_FILE="$env:LOCALAPPDATA\Android\Sdk\ndk-bundle\build\cmake\android.toolchain.cmake" `
+-DCMAKE_MAKE_PROGRAM="$env:LOCALAPPDATA\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe" `
+`
+-DANDROID_ABI="$archTarget" `
+-DANDROID_PLATFORM="$platformVer" `
+`
+-DLLVM_DIR="$faustAndroidSrcPath\libs\llvm_for_android\android-build\$archTarget\lib\cmake\llvm" `
+-DUSE_LLVM_CONFIG="OFF" `
+`
+-DLIBFAUST_DIR="$faustAndroidSrcPath\out\$archTarget\lib" `
+-DINCLUDE_DIR="$faustAndroidSrcPath\out\$archTarget\include" `
+`
+-G "Ninja" `
+`
+"$faustAndroidSrcPath\faust-src\tests\llvm-tests"
+
+. $cmakeExe --build .
