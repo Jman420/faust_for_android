@@ -65,8 +65,8 @@ fastlane/test_output
 fastlane/readme.md
 
 # Ignore Faust Source & Build Directories
-obj/*
-libs/*
+build/*
+test-build/*
 out/*
 faust-src/*
 !dummy.txt
