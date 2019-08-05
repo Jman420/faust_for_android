@@ -71,3 +71,4 @@ out/*
 faust-src/*
 !dummy.txt
 *.cmake
+build_tests_cmds.txt

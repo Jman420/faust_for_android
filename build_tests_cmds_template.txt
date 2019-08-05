@@ -1,4 +1,4 @@
-$faustAndroidSrcPath = "<PATH TO FAUST FOR ANDROID SOURCE>"
+$faustAndroidSrcPath = "<REPLACE WITH PATH TO FAUST FOR ANDROID SOURCE>"
 $cmakeExe = "$env:LOCALAPPDATA\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe"
 $archTarget = "x86"
 $platformVer = "21"
