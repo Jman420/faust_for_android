@@ -1,5 +1,5 @@
-$ProjectDir = "build"
-$BuildDir = "out"
+$ProjectDir = "project"
+$BuildDir = "build"
 $RootSourcePath = "faust-src"
 
 $AndroidSystemVersion="21"
@@ -9,9 +9,9 @@ $AndroidNinja = "$AndroidSdkDir/cmake/3.10.2.4988404/bin/ninja.exe"
 $NdkBundle = "$AndroidSdkDir/ndk-bundle/"
 $ToolchainFile = "$NdkBundle/build/cmake/android.toolchain.cmake"
 $ToolchainBinsRoot = "$NdkBundle/toolchains"
-$ArchTargets = @("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-$ArchToolchains = @("arm-linux-androideabi", "aarch64-linux-android", "x86", "x86_64" )
-$ArchToolchainFolders = @("arm-linux-androideabi", "aarch64-linux-android", "i686-linux-android", "x86_64-linux-android")
+$ArchTargets = @("x86") #@("armeabi-v7a", "x86")
+$ArchToolchains = @("x86") #@("arm-linux-androideabi", "x86")
+$ArchToolchainFolders = @("i686-linux-android") #@("arm-linux-androideabi", "i686-linux-android")
 $ArchToolchainVersion = "4.9"
 
 $LlvmAndroidBuildPath = "libs/llvm_for_android/android-build"
@@ -63,6 +63,14 @@ for ($archCounter = 0; $archCounter -lt $ArchTargets.Length; $archCounter++) {
         "../../$RootSourcePath/build/"
     if (!$?) {
         Write-Output "Project Generation failed for Architecture : $archTarget !"
+        Pop-Location
+        exit 1
+    }
+    
+    Write-Output "Cleaning Build Environment for Architecture : $archTarget ..."
+    . $AndroidCmake --build . --target clean
+    if (!$?) {
+        Write-Output "Cleaning Build Environment failed for Architecture : $archTarget !"
         Pop-Location
         exit 1
     }

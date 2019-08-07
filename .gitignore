@@ -67,7 +67,7 @@ fastlane/readme.md
 # Ignore Faust Source & Build Directories
 build/*
 test-build/*
-out/*
+project/*
 faust-src/*
 !dummy.txt
 *.cmake
